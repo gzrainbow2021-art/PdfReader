@@ -25,7 +25,7 @@ jobs:
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/values
 
-        # 1. settings.gradle
+        # 1. settings.gradle (统一管理仓库)
         cat << 'EOF' > settings.gradle
         pluginManagement {
             repositories {
@@ -45,21 +45,11 @@ jobs:
         include ":app"
         EOF
 
-        # 2. Top-level build.gradle
+        # 2. Top-level build.gradle (不声明 repositories，避免冲突)
         cat << 'EOF' > build.gradle
         buildscript {
-            repositories {
-                google()
-                mavenCentral()
-            }
             dependencies {
                 classpath 'com.android.tools.build:gradle:8.0.2'
-            }
-        }
-        allprojects {
-            repositories {
-                google()
-                mavenCentral()
             }
         }
         EOF
