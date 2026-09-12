@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout Code
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -19,140 +19,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Init Complete Android Project
+    - name: Build Debug APK
       run: |
-        mkdir -p app/src/main/java/com/example/pdfreader
-        mkdir -p app/src/main/res/layout
-        mkdir -p app/src/main/res/values
+        chmod +x gradlew || true
+        ./gradlew assembleDebug --no-daemon
 
-        # 1. settings.gradle (统一管理仓库)
-        cat << 'EOF' > settings.gradle
-        pluginManagement {
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
-        }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-        rootProject.name = "PdfReader"
-        include ":app"
-        EOF
-
-        # 2. Top-level build.gradle (不声明 repositories，避免冲突)
-        cat << 'EOF' > build.gradle
-        buildscript {
-            dependencies {
-                classpath 'com.android.tools.build:gradle:8.0.2'
-            }
-        }
-        EOF
-
-        # 3. app/build.gradle
-        cat << 'EOF' > app/build.gradle
-        plugins {
-            id 'com.android.application'
-        }
-
-        android {
-            namespace 'com.example.pdfreader'
-            compileSdk 33
-
-            defaultConfig {
-                applicationId "com.example.pdfreader"
-                minSdk 26
-                targetSdk 33
-                versionCode 1
-                versionName "1.0"
-            }
-
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
-            }
-        }
-
-        dependencies {
-            implementation 'androidx.appcompat:appcompat:1.6.1'
-            implementation 'com.google.android.material:material:1.9.0'
-            implementation 'com.tom-roush:pdfbox-android:1.8.11.0'
-        }
-        EOF
-
-        # 4. AndroidManifest.xml
-        cat << 'EOF' > app/src/main/AndroidManifest.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application
-                android:allowBackup="true"
-                android:label="PDF 图文听读助手"
-                android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-                <activity android:name=".MainActivity" android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-                </activity>
-            </application>
-        </manifest>
-        EOF
-
-        # 5. activity_main.xml
-        cat << 'EOF' > app/src/main/res/layout/activity_main.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PDF 图文听读助手"
-                android:textSize="18sp"/>
-            <View
-                android:id="@+id/pdfCanvasView"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="#EEEEEE"/>
-            <Button
-                android:id="@+id/btnSelectPdf"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="选择 PDF 文件并听读"/>
-        </LinearLayout>
-        EOF
-
-        # 6. MainActivity.java
-        cat << 'EOF' > app/src/main/java/com/example/pdfreader/MainActivity.java
-        package com.example.pdfreader;
-
-        import android.os.Bundle;
-        import androidx.appcompat.app.AppCompatActivity;
-
-        public class MainActivity extends AppCompatActivity {
-            @Override
-            protected void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                setContentView(R.layout.activity_main);
-            }
-        }
-        EOF
-
-    - name: Setup Gradle & Build APK
-      uses: gradle/gradle-build-action@v2
-      with:
-        gradle-version: '8.0'
-        arguments: assembleDebug
-
-    - name: Upload APK Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: Pura70_PdfReader_Demo
