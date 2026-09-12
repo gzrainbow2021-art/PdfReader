@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -19,7 +19,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Generate Project Files
+    - name: Generate Source Files
       run: |
         mkdir -p app/src/main/java/com/example/pdfreader
         mkdir -p app/src/main/res/layout
@@ -137,13 +137,11 @@ jobs:
         }
         EOF
 
-    - name: Setup Gradle Wrapper
-      run: |
-        gradle wrapper
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
 
     - name: Build APK with Gradle
-      run: |
-        ./gradlew assembleDebug
+      run: gradle assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
