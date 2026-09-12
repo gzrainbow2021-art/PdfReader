@@ -19,17 +19,27 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Android SDK & Gradle
+    - name: Generate Project Files
       run: |
         mkdir -p app/src/main/java/com/example/pdfreader
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/values
 
-    - name: Create build files
-      run: |
         cat << 'EOF' > settings.gradle.kts
-        pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
-        dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
         rootProject.name = "PdfReader"
         include(":app")
         EOF
@@ -127,11 +137,13 @@ jobs:
         }
         EOF
 
-    - name: Grant execute permission for gradlew
-      run: gradle wrapper
+    - name: Setup Gradle Wrapper
+      run: |
+        gradle wrapper
 
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug
+    - name: Build APK with Gradle
+      run: |
+        ./gradlew assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
