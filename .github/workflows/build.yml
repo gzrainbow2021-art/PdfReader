@@ -25,26 +25,44 @@ jobs:
         mkdir -p app/src/main/res/layout
 
         cat << 'EOF' > settings.gradle
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
         rootProject.name = "PdfReader"
         include ":app"
         EOF
 
         cat << 'EOF' > build.gradle
         buildscript {
-            repositories { google(); mavenCentral() }
+            repositories {
+                google()
+                mavenCentral()
+            }
             dependencies {
                 classpath 'com.android.tools.build:gradle:8.1.1'
-                classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0'
             }
         }
         allprojects {
-            repositories { google(); mavenCentral() }
+            repositories {
+                google()
+                mavenCentral()
+            }
         }
         EOF
 
         cat << 'EOF' > app/build.gradle
         apply plugin: 'com.android.application'
-        apply plugin: 'kotlin-android'
 
         android {
             compileSdkVersion 34
@@ -109,23 +127,23 @@ jobs:
         </LinearLayout>
         EOF
 
-        cat << 'EOF' > app/src/main/java/com/example/pdfreader/MainActivity.kt
-        package com.example.pdfreader
-        import android.os.Bundle
-        import androidx.appcompat.app.AppCompatActivity
+        cat << 'EOF' > app/src/main/java/com/example/pdfreader/MainActivity.java
+        package com.example.pdfreader;
 
-        class MainActivity : AppCompatActivity() {
-            override fun onCreate(savedInstanceState: Bundle?) {
-                super.onCreate(savedInstanceState)
-                setContentView(R.layout.activity_main)
+        import android.os.Bundle;
+        import androidx.appcompat.app.AppCompatActivity;
+
+        public class MainActivity extends AppCompatActivity {
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_main);
             }
         }
         EOF
 
     - name: Setup Gradle
-      uses: gradle/gradle-build-action@v3
-      with:
-        gradle-version: 8.2
+      uses: gradle/actions/setup-gradle@v3
 
     - name: Build Debug APK
       run: gradle assembleDebug
