@@ -7,10 +7,10 @@ on:
 
 jobs:
   build:
-    runs-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -19,27 +19,108 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Create Essential Files
+    - name: Init Android Project Structure
       run: |
         mkdir -p app/src/main/java/com/example/pdfreader
         mkdir -p app/src/main/res/layout
 
-        echo 'rootProject.name = "PdfReader"' > settings.gradle
-        echo 'include ":app"' >> settings.gradle
+        cat << 'EOF' > settings.gradle
+        rootProject.name = "PdfReader"
+        include ":app"
+        EOF
 
-        echo 'buildscript { repositories { google(); mavenCentral() }; dependencies { classpath "com.android.tools.build:gradle:8.1.1"; classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0" } }' > build.gradle
-        echo 'allprojects { repositories { google(); mavenCentral() } }' >> build.gradle
+        cat << 'EOF' > build.gradle
+        buildscript {
+            repositories { google(); mavenCentral() }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.1.1'
+                classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0'
+            }
+        }
+        allprojects {
+            repositories { google(); mavenCentral() }
+        }
+        EOF
 
-        echo 'apply plugin: "com.android.application"' > app/build.gradle
-        echo 'apply plugin: "kotlin-android"' >> app/build.gradle
-        echo 'android { compileSdkVersion 34; defaultConfig { applicationId "com.example.pdfreader"; minSdkVersion 26; targetSdkVersion 34; versionCode 1; versionName "1.0" } }' >> app/build.gradle
-        echo 'dependencies { implementation "androidx.core:core-ktx:1.12.0"; implementation "androidx.appcompat:appcompat:1.6.1"; implementation "com.google.android.material:material:1.11.0"; implementation "com.tom-roush:pdfbox-android:1.8.11.0" }' >> app/build.gradle
+        cat << 'EOF' > app/build.gradle
+        apply plugin: 'com.android.application'
+        apply plugin: 'kotlin-android'
 
-        echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:allowBackup="true" android:label="PDF 图文听读助手" android:theme="@style/Theme.AppCompat.Light.NoActionBar"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+        android {
+            compileSdkVersion 34
+            namespace 'com.example.pdfreader'
+            defaultConfig {
+                applicationId "com.example.pdfreader"
+                minSdkVersion 26
+                targetSdkVersion 34
+                versionCode 1
+                versionName "1.0"
+            }
+        }
 
-        echo '<?xml version="1.0" encoding="utf-8"?><LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PDF 图文听读助手" android:textSize="18sp"/><View android:id="@+id/pdfCanvasView" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:background="#EEEEEE"/><Button android:id="@+id/btnSelectPdf" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="选择 PDF 文件并听读"/></LinearLayout>' > app/src/main/res/layout/activity_main.xml
+        dependencies {
+            implementation 'androidx.core:core-ktx:1.12.0'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.11.0'
+            implementation 'com.tom-roush:pdfbox-android:1.8.11.0'
+        }
+        EOF
 
-        echo 'package com.example.pdfreader; import android.os.Bundle; import androidx.appcompat.app.AppCompatActivity; public class MainActivity extends AppCompatActivity { @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); setContentView(R.layout.activity_main); } }' > app/src/main/java/com/example/pdfreader/MainActivity.java
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <application
+                android:allowBackup="true"
+                android:label="PDF 图文听读助手"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+                <activity android:name=".MainActivity" android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>
+        EOF
+
+        cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PDF 图文听读助手"
+                android:textSize="18sp"/>
+            <View
+                android:id="@+id/pdfCanvasView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="#EEEEEE"/>
+            <Button
+                android:id="@+id/btnSelectPdf"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="选择 PDF 文件并听读"/>
+        </LinearLayout>
+        EOF
+
+        cat << 'EOF' > app/src/main/java/com/example/pdfreader/MainActivity.kt
+        package com.example.pdfreader
+        import android.os.Bundle
+        import androidx.appcompat.app.AppCompatActivity
+
+        class MainActivity : AppCompatActivity() {
+            override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                setContentView(R.layout.activity_main)
+            }
+        }
+        EOF
 
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v3
