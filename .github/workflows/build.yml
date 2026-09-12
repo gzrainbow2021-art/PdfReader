@@ -19,16 +19,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Gradle 8.2
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.2'
-
-    - name: Init Android Project Structure
+    - name: Init Complete Android Project
       run: |
         mkdir -p app/src/main/java/com/example/pdfreader
         mkdir -p app/src/main/res/layout
+        mkdir -p app/src/main/res/values
 
+        # 1. settings.gradle
         cat << 'EOF' > settings.gradle
         pluginManagement {
             repositories {
@@ -48,6 +45,7 @@ jobs:
         include ":app"
         EOF
 
+        # 2. Top-level build.gradle
         cat << 'EOF' > build.gradle
         buildscript {
             repositories {
@@ -55,34 +53,49 @@ jobs:
                 mavenCentral()
             }
             dependencies {
-                classpath 'com.android.tools.build:gradle:8.1.1'
+                classpath 'com.android.tools.build:gradle:8.0.2'
+            }
+        }
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
             }
         }
         EOF
 
+        # 3. app/build.gradle
         cat << 'EOF' > app/build.gradle
-        apply plugin: 'com.android.application'
+        plugins {
+            id 'com.android.application'
+        }
 
         android {
-            compileSdkVersion 34
             namespace 'com.example.pdfreader'
+            compileSdk 33
+
             defaultConfig {
                 applicationId "com.example.pdfreader"
-                minSdkVersion 26
-                targetSdkVersion 34
+                minSdk 26
+                targetSdk 33
                 versionCode 1
                 versionName "1.0"
+            }
+
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
             }
         }
 
         dependencies {
-            implementation 'androidx.core:core-ktx:1.12.0'
             implementation 'androidx.appcompat:appcompat:1.6.1'
-            implementation 'com.google.android.material:material:1.11.0'
+            implementation 'com.google.android.material:material:1.9.0'
             implementation 'com.tom-roush:pdfbox-android:1.8.11.0'
         }
         EOF
 
+        # 4. AndroidManifest.xml
         cat << 'EOF' > app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -100,6 +113,7 @@ jobs:
         </manifest>
         EOF
 
+        # 5. activity_main.xml
         cat << 'EOF' > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -126,6 +140,7 @@ jobs:
         </LinearLayout>
         EOF
 
+        # 6. MainActivity.java
         cat << 'EOF' > app/src/main/java/com/example/pdfreader/MainActivity.java
         package com.example.pdfreader;
 
@@ -141,12 +156,13 @@ jobs:
         }
         EOF
 
-    - name: Generate Wrapper & Build Debug APK
-      run: |
-        gradle wrapper --gradle-version 8.2
-        ./gradlew assembleDebug --stacktrace
+    - name: Setup Gradle & Build APK
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: '8.0'
+        arguments: assembleDebug
 
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Pura70_PdfReader_Demo
