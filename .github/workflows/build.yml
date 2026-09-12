@@ -19,12 +19,33 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build Debug APK
-      run: |
-        chmod +x gradlew || true
-        ./gradlew assembleDebug --no-daemon
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.2'
+        cache-disabled: true
 
-    - name: Upload APK
+    - name: Generate Project Files
+      run: |
+        mkdir -p app/src/main/java/com/example/pdfreader
+        mkdir -p app/src/main/res/layout
+
+        printf 'rootProject.name = "PdfReader"\ninclude ":app"\n' > settings.gradle
+
+        printf 'buildscript {\n    dependencies {\n        classpath "com.android.tools.build:gradle:8.1.1"\n    }\n}\n' > build.gradle
+
+        printf 'plugins {\n    id "com.android.application"\n}\n\nandroid {\n    namespace "com.example.pdfreader"\n    compileSdk 34\n    defaultConfig {\n        applicationId "com.example.pdfreader"\n        minSdk 26\n        targetSdk 34\n        versionCode 1\n        versionName "1.0"\n    }\n}\n\ndependencies {\n    implementation "androidx.appcompat:appcompat:1.6.1"\n    implementation "com.google.android.material:material:1.11.0"\n    implementation "com.tom-roush:pdfbox-android:1.8.11.0"\n}\n' > app/build.gradle
+
+        printf '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <application\n        android:allowBackup="true"\n        android:label="PDF听读助手"\n        android:theme="@style/Theme.AppCompat.Light.NoActionBar">\n        <activity android:name=".MainActivity" android:exported="true">\n            <intent-filter>\n                <action android:name="android.intent.action.MAIN" />\n                <category android:name="android.intent.category.LAUNCHER" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n' > app/src/main/AndroidManifest.xml
+
+        printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"\n    android:layout_width="match_parent"\n    android:layout_height="match_parent"\n    android:orientation="vertical">\n    <TextView\n        android:layout_width="wrap_content"\n        android:layout_height="wrap_content"\n        android:text="PDF 听读助手"/>\n</LinearLayout>\n' > app/src/main/res/layout/activity_main.xml
+
+        printf 'package com.example.pdfreader;\n\nimport android.os.Bundle;\nimport androidx.appcompat.app.AppCompatActivity;\n\npublic class MainActivity extends AppCompatActivity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        setContentView(R.layout.activity_main);\n    }\n}\n' > app/src/main/java/com/example/pdfreader/MainActivity.java
+
+    - name: Build Debug APK
+      run: gradle assembleDebug
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Pura70_PdfReader_Demo
